@@ -6,22 +6,24 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport
 
 class TarefaController {
 
+    TarefaService tarefaService
+
     def index() {
-        respond Tarefa.list()
+        respond tarefaService.listar()
     }
 
-    @Transactional
     def save(Tarefa tarefa) {
-        if (tarefa.validate()) {
-            tarefa.save(flush: true)
-            respond tarefa, status: 201
+        def resultado = tarefaService.criar(tarefa)
+
+        if (resultado.hasErrors()) {
+            respond resultado.errors, status: 422
         } else {
-            respond tarefa.errors, status: 422
+            respond resultado, status: 201
         }
     }
 
     def show(Long id) {
-        def tarefa = Tarefa.get(id)
+        def tarefa = tarefaService.buscar(id)
 
         if (tarefa) {
             respond tarefa, status: 200
@@ -30,30 +32,22 @@ class TarefaController {
         }
     }
 
-    @Transactional
     def update(Long id) {
-        def tarefa = Tarefa.get(id)
+        def resultado = tarefaService.atualizar(
+                id, request.JSON as Map
+        )
 
-        if (tarefa) {
-            tarefa.properties = request.JSON
-
-            if (tarefa.validate()) {
-                tarefa.save(flush: true)
-                respond tarefa, status: 200
-            } else {
-                tarefa.discard()
-                respond tarefa.errors, status: 422
-            }
-        } else {
+        if (!resultado) {
             render status: 404
+        } else if (resultado.errors) {
+            respond resultado.errors, status: 422
+        } else {
+            respond resultado.tarefa, status: 200
         }
     }
 
-    @Transactional
     def delete(Long id) {
-        def tarefa = Tarefa.get(id)
-        if (tarefa) {
-            tarefa.delete(flush: true)
+        if (tarefaService.excluir(id)) {
             render status: 204
         } else {
             render status: 404
