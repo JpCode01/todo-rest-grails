@@ -36,6 +36,18 @@ grails:
       rss: application/rss+xml
       text: text/plain
       all: '*/*'
+  cors:
+    enabled: true
+    allowedOrigins:
+      - "http://localhost:4200"
+    allowedMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowedHeaders:
+      - Content-Type
 dataSource:
   driverClassName: org.h2.Driver
   username: sa
