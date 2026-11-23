@@ -1,6 +1,7 @@
 package todo.grails
 
 import grails.gorm.transactions.Transactional
+import todo.grails.enums.Status
 
 @Transactional
 class TarefaService {
@@ -50,5 +51,34 @@ class TarefaService {
 
         tarefa.delete(flush: true)
         return true
+    }
+
+    def executar(Long id, Boolean enviarEmail) {
+        def tarefa = Tarefa.get(id)
+
+        if (!tarefa) {
+            return null
+        }
+
+        if (tarefa.status == Status.CONCLUIDA) {
+            return [
+                    resultado: "Esta tarefa já foi concluída.",
+                    tarefa: tarefa,
+                    conflito: true
+            ]
+        }
+
+        tarefa.status = Status.CONCLUIDA
+        tarefa.save(flush: true)
+
+        if (enviarEmail) {
+            log.info("Enviando Email...")
+        }
+
+        def mensagem = enviarEmail
+                ? "Tarefa executada e Email disparado com sucesso."
+                : "Tarefa executada."
+
+        return [resultado: mensagem, tarefa: tarefa]
     }
 }

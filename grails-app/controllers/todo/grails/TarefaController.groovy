@@ -53,4 +53,18 @@ class TarefaController {
             render status: 404
         }
     }
+
+    def executar(Long id) {
+        def enviarEmail = params.boolean('email') ?: false
+
+        def resultado = tarefaService.executar(id, enviarEmail)
+
+        if (!resultado) {
+            render status: 404
+        } else if (resultado.conflito) {
+            respond resultado, status: 409
+        } else {
+            respond resultado, status: 200
+        }
+    }
 }
